@@ -22,7 +22,16 @@ namespace EventbriteCSharp
              var personal_OAuthKey = "2NEWI72RJPV4KP2G64V3";
              var anonymo_OAuthKey = "3TS6HOXNUTZ7AX46VQTQ";
              var orginazerID = 36281473865;*/
-            
+
+            //start_date.range_start
+            //start_date.range_end
+            //q
+            //event.start.utc
+            //event.capacity	
+            //event.show_remaining
+            //location.latitude
+            //location.longitude
+
             var locat = 5;
             double lat = 38.9339;
             double longt = -77.1773;
@@ -30,13 +39,13 @@ namespace EventbriteCSharp
             var endDate = "2017-07-19T09:42:54Z";
             var token = "2NEWI72RJPV4KP2G64V3";
  
-            GetData(locat, lat, longt, stDate, endDate, token);
+            var data = GetData(locat, lat, longt, stDate, endDate, token);
 
             Console.ReadKey();
 
         }
 
-        public static string GetData(int locat, double lat, double longt, string stDate, string endDate, string token)
+        public static string[] GetData(int locat, double lat, double longt, string stDate, string endDate, string token)
         {
             //https://www.eventbriteapi.com/v3/events/search/?location.within=100mi&location.latitude=38.9339&location.longitude=-77.1773&start_date.range_start=2017-07-19T09%3A42%3A54Z&&token=2NEWI72RJPV4KP2G64V3
             string url = "https://www.eventbriteapi.com/v3/events/search/?" + "location.within=" + locat + "mi" + "&location.latitude=" + lat + "&location.longitude="
@@ -51,27 +60,15 @@ namespace EventbriteCSharp
 
                 dynamic deserializedValue = JsonConvert.DeserializeObject(response);
                 var values = deserializedValue["events"][0];
-
-                string result = "";
+                
                 var capacity = JObject.Parse(response)["events"].Select(v => (int)v["capacity"]).ToList();
+                string[] respArr = new string[capacity.Count];
                 for (int i = 0; i < capacity.Count; i++)
                 {
-                   var a = ("date & time" + stDate + " lat = " + lat + " longt = " + longt + " people = " + capacity[i]);
-                    result += a;
-                }
-                Console.WriteLine(result);
-                
-
-
-                //start_date.range_start
-                //start_date.range_end
-                //q
-                //event.start.utc
-                //event.capacity	
-                //event.show_remaining
-                //location.latitude
-                //location.longitude
-                return result;
+                    respArr[i] = (" date & time" + stDate + " lat = " + lat + " longt = " + longt + " people = " + capacity[i]);
+                   // Console.WriteLine(respArr[i]);
+                }                
+                return respArr;
             }
 
             
