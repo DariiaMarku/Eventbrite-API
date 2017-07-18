@@ -1,0 +1,73 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using EventbriteNET;
+using System.Net.Http;
+using System.Net;
+using System.IO;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+
+namespace EventbriteCSharp
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            /* var app_key = "34HMDFZMS6VYCJI2YS";
+             var user_key = "1447771757158491292723";
+             var client_secret = "RLBMWDD3NWAPZKYHDAFCQCLNUV44HSRQ5WRFHK7XHGUJVUEDQO";
+             var personal_OAuthKey = "2NEWI72RJPV4KP2G64V3";
+             var anonymo_OAuthKey = "3TS6HOXNUTZ7AX46VQTQ";
+             var orginazerID = 36281473865;*/
+            
+            var locat = 5;
+            var lat = 38.9339;
+            var longt = -77.1773;
+            var stDate = "2017-07-19T09:42:54Z";
+            var endDate = "2017-07-19T09:42:54Z";
+            var token = "2NEWI72RJPV4KP2G64V3";
+
+            // Link, where the request will be sent 
+            //https://www.eventbriteapi.com/v3/events/search/?location.within=100mi&location.latitude=38.9339&location.longitude=-77.1773&start_date.range_start=2017-07-19T09%3A42%3A54Z&&token=2NEWI72RJPV4KP2G64V3
+            string url = "https://www.eventbriteapi.com/v3/events/search/?" + "location.within=" + locat + "mi" + "&location.latitude=" + lat + "&location.longitude="
+                + longt + "&start_date.range_start=" + stDate + "&start_date.range_end=" + endDate + "&token=" + token ;
+
+            // Creating an object of WebClient 
+            using (var webClient = new WebClient())
+            {
+                // Give the key to get acces 
+                webClient.Headers.Add("Authorization", "Bearer 2NEWI72RJPV4KP2G64V3");
+                //Execute the query at the provided address and get a response from Eventbrite API as a string
+                string response = webClient.DownloadString(url);
+                
+                
+               // string json = response;
+                dynamic deserializedValue = JsonConvert.DeserializeObject(response);
+                var values = deserializedValue["events"][0];
+                //var ba = values.
+                // ja ponal
+                var capacity = JObject.Parse(response)["events"].Select(v => (int)v["capacity"]).ToList();
+                  for (int i = 0; i < capacity.Count; i++)
+               {
+                  Console.WriteLine("date & time" + stDate + " lat = " + lat + " longt = " + longt + " people = "+ capacity[i]);
+               }
+
+              
+                //start_date.range_start
+                //start_date.range_end
+                //q
+                //event.start.utc
+                //event.capacity	
+                //event.show_remaining
+                //location.latitude
+                //location.longitude
+            }
+
+            Console.ReadKey();
+
+        }
+    }
+}
