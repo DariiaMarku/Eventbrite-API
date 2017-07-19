@@ -1,7 +1,7 @@
 USE [master]
 GO
 
-/****** Object:  Database [EventBriteData]    Script Date: 7/19/2017 11:13:39 AM ******/
+/****** Object:  Database [EventBriteData]    Script Date: 7/19/2017 2:43:49 PM ******/
 CREATE DATABASE [EventBriteData]
  CONTAINMENT = NONE
  ON  PRIMARY 
