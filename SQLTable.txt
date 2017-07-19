@@ -1,15 +1,15 @@
 USE [EventBriteData]
 GO
 
-/****** Object:  Table [dbo].[EventData]    Script Date: 7/19/2017 10:53:25 AM ******/
+/****** Object:  Table [dbo].[EventBTable]    Script Date: 7/19/2017 11:12:52 AM ******/
 SET ANSI_NULLS ON
 GO
 
 SET QUOTED_IDENTIFIER ON
 GO
 
-CREATE TABLE [dbo].[EventData](
-	[EB_ID] [int] NOT NULL,
+CREATE TABLE [dbo].[EventBTable](
+	[EB_ID] [int] IDENTITY(1,1) NOT NULL,
 	[EB_LAT] [decimal](18, 0) NOT NULL,
 	[EB_LONGT] [decimal](18, 0) NOT NULL,
 	[EB_TIME] [datetime] NOT NULL,
