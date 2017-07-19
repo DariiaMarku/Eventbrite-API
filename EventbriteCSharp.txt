@@ -9,6 +9,8 @@ using System.Net;
 using System.IO;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System.Data.SqlClient;
+using System.Data;
 
 namespace EventbriteCSharp
 {
@@ -16,34 +18,53 @@ namespace EventbriteCSharp
     {
         static void Main(string[] args)
         {
-            /* var app_key = "34HMDFZMS6VYCJI2YS";
-             var user_key = "1447771757158491292723";
-             var client_secret = "RLBMWDD3NWAPZKYHDAFCQCLNUV44HSRQ5WRFHK7XHGUJVUEDQO";
-             var personal_OAuthKey = "2NEWI72RJPV4KP2G64V3";
-             var anonymo_OAuthKey = "3TS6HOXNUTZ7AX46VQTQ";
-             var orginazerID = 36281473865;*/
-
-            //start_date.range_start
-            //start_date.range_end
-            //q
-            //event.start.utc
-            //event.capacity	
-            //event.show_remaining
-            //location.latitude
-            //location.longitude
-
             var locat = 5;
             double lat = 38.9339;
             double longt = -77.1773;
-            var stDate = "2017-07-19T09:42:54Z";
-            var endDate = "2017-07-19T09:42:54Z";
+            var stDate = "2017-07-20T09:42:54Z";
+            var endDate = "2017-07-22T09:42:54Z";
             var token = "2NEWI72RJPV4KP2G64V3";
  
             var data = GetData(locat, lat, longt, stDate, endDate, token);
 
+            //Server=myServerName\myInstanceName;Database=myDataBase;User Id=myUsername; Password = myPassword;
+            SqlConnection conn = new SqlConnection(@"Server= LAPTOP-JDV1D5J5\SQLEXPRESS; Database=EventBriteData; User Id=sa; Password = 1234;");
+            string querySelect = string.Format("SELECT * FROM EventBTable; ");
+            SqlCommand cmd = new SqlCommand(querySelect, conn);
+            conn.Open();
+
+            // create data adapter
+            SqlDataAdapter dataAdapt = new SqlDataAdapter(cmd);
+
+            //query your database and return the result to your datatable
+            DataTable dataTable = new DataTable();
+            dataAdapt.Fill(dataTable);
+            foreach (DataRow dataRow in dataTable.Rows)
+            {
+                foreach (var item in dataRow.ItemArray)
+                {
+                    Console.WriteLine(item);
+                }
+            }
+            conn.Close();
+            dataAdapt.Dispose();
+
+
             Console.ReadKey();
 
         }
+
+
+        public static void ConnectToSQL(string server, string database, string user, string password)
+        {
+            
+        } 
+
+        public static void InsertToSQL(double lat, double longt, string dateT, int population, int source)
+        {
+
+        }
+
 
         public static string[] GetData(int locat, double lat, double longt, string stDate, string endDate, string token)
         {
@@ -58,16 +79,31 @@ namespace EventbriteCSharp
                 //Execute the query at the provided address and get a response from Eventbrite API as a string
                 string response = webClient.DownloadString(url);
 
-                dynamic deserializedValue = JsonConvert.DeserializeObject(response);
-                var values = deserializedValue["events"][0];
-                
+                //Connect to database, where the data will be stored
+                SqlConnection conn = new SqlConnection(@"Server= LAPTOP-JDV1D5J5\SQLEXPRESS; Database=EventBriteData; User Id=sa; Password = 1234;");
+                conn.Open();
+
+                //extracting capacity, startdate & enddate
                 var capacity = JObject.Parse(response)["events"].Select(v => (int)v["capacity"]).ToList();
+                var timeStart = JObject.Parse(response)["events"].Select(v => (DateTime)v["start"]["local"]).ToList();
+                var timeEnd = JObject.Parse(response)["events"].Select(v => (DateTime)v["end"]["local"]).ToList();
+
                 string[] respArr = new string[capacity.Count];
+
+                // Recording received elements to SLQ 
                 for (int i = 0; i < capacity.Count; i++)
                 {
-                    respArr[i] = (" date & time" + stDate + " lat = " + lat + " longt = " + longt + " people = " + capacity[i]);
-                   // Console.WriteLine(respArr[i]);
-                }                
+                    respArr[i] = (" date & time start " + timeStart[i] + " date & time end " + timeEnd[i] + " lat = " + lat + " longt = " + longt + " people = " + capacity[i]);
+
+                    string queryInsert = "INSERT into EventBTable (EBLat, EBLongt, EBTimeStart, EBTimeEnd, EBPopulation, EBSource)" +
+                                   "VALUES (" + lat + ", " + longt + ", '" + timeStart[i].ToString("yyyy-MM-dd HH:mm:ss") + "', '" + timeEnd[i].ToString("yyyy-MM-dd HH:mm:ss") + "', " + capacity[i] + ", " + "3" + ")";
+
+                    SqlCommand cmd = new SqlCommand(queryInsert, conn);
+                    cmd.ExecuteNonQuery();                 
+                }
+
+                Console.WriteLine("Inserting Data Successfully");
+                conn.Close();
                 return respArr;
             }
 
