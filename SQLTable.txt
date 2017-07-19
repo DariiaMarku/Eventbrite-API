@@ -1,0 +1,22 @@
+USE [EventBriteData]
+GO
+
+/****** Object:  Table [dbo].[EventData]    Script Date: 7/19/2017 10:53:25 AM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[EventData](
+	[EB_ID] [int] NOT NULL,
+	[EB_LAT] [decimal](18, 0) NOT NULL,
+	[EB_LONGT] [decimal](18, 0) NOT NULL,
+	[EB_TIME] [datetime] NOT NULL,
+	[EB_POPULATION] [int] NOT NULL,
+	[EB_SOURCE] [int] NOT NULL
+) ON [PRIMARY]
+
+GO
+
+
