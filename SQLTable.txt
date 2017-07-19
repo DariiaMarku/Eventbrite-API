@@ -1,7 +1,7 @@
 USE [EventBriteData]
 GO
 
-/****** Object:  Table [dbo].[EventBTable]    Script Date: 7/19/2017 11:12:52 AM ******/
+/****** Object:  Table [dbo].[EventBTable]    Script Date: 7/19/2017 2:43:01 PM ******/
 SET ANSI_NULLS ON
 GO
 
@@ -9,12 +9,17 @@ SET QUOTED_IDENTIFIER ON
 GO
 
 CREATE TABLE [dbo].[EventBTable](
-	[EB_ID] [int] IDENTITY(1,1) NOT NULL,
-	[EB_LAT] [decimal](18, 0) NOT NULL,
-	[EB_LONGT] [decimal](18, 0) NOT NULL,
-	[EB_TIME] [datetime] NOT NULL,
-	[EB_POPULATION] [int] NOT NULL,
-	[EB_SOURCE] [int] NOT NULL
+	[ID] [int] IDENTITY(1,1) NOT NULL,
+	[EBLongt] [float] NOT NULL,
+	[EBLat] [float] NOT NULL,
+	[EBTimeEnd] [datetime] NOT NULL,
+	[EBTimeStart] [datetime] NOT NULL,
+	[EBPopulation] [int] NOT NULL,
+	[EBSource] [int] NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[ID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 
 GO
