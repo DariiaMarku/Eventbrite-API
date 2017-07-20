@@ -14,7 +14,8 @@ using System.Data;
 
 namespace EventbriteCSharp
 {
-    class Program
+
+    class EventBrite
     {
         static void Main(string[] args)
         {
@@ -24,12 +25,26 @@ namespace EventbriteCSharp
             var stDate = "2017-07-20T09:42:54Z";
             var endDate = "2017-07-22T09:42:54Z";
             var token = "2NEWI72RJPV4KP2G64V3";
- 
-            var data = GetData(locat, lat, longt, stDate, endDate, token);
+            var a = ReturnListModel(locat, lat, longt, stDate, endDate, token);
+            Console.ReadKey();
+        }
 
-            //Server=myServerName\myInstanceName;Database=myDataBase;User Id=myUsername; Password = myPassword;
+        public static IList <PopulationDencityModel>  ReturnListModel (int locat, double lat, double longt, string stDate, string endDate, string token)
+        {
+            /*
+            declare @num_hours int; 
+            set @num_hours = 5; 
+
+            select dateadd(HOUR, @num_hours, getdate()) as time_added, 
+            getdate() as curr_date  
+            */
+             
+            var data = GetData(locat, lat, longt, stDate, endDate, token);
             SqlConnection conn = new SqlConnection(@"Server= LAPTOP-JDV1D5J5\SQLEXPRESS; Database=EventBriteData; User Id=sa; Password = 1234;");
-            string querySelect = string.Format("SELECT * FROM EventBTable; ");
+
+            string querySelect = string.Format("SELECT * FROM EventBTable;");
+            /*  string querySelect = string.Format("SELECT * FROM EventBTable" + "WHERE EBLongt in (" + longt + ") and EBLat in (" + lat + ") and" +
+                "EBTimeStart between" + stDate + " and " + "dateadd(HOUR, 5, " + stDate +")");*/
             SqlCommand cmd = new SqlCommand(querySelect, conn);
             conn.Open();
 
@@ -39,29 +54,22 @@ namespace EventbriteCSharp
             //query your database and return the result to your datatable
             DataTable dataTable = new DataTable();
             dataAdapt.Fill(dataTable);
-            foreach (DataRow dataRow in dataTable.Rows)
+         /*   foreach (DataRow dataRow in dataTable.Rows)
             {
                 foreach (var item in dataRow.ItemArray)
                 {
-                    Console.WriteLine(item);
+                    //Console.WriteLine(item);
                 }
-            }
+            }*/
             conn.Close();
             dataAdapt.Dispose();
 
-
-            Console.ReadKey();
-
-        }
-
-
-        public static void ConnectToSQL(string server, string database, string user, string password)
-        {
-            
-        } 
-
-        public static void InsertToSQL(double lat, double longt, string dateT, int population, int source)
-        {
+            var popupDens = dataTable.MapTableToList<PopulationDencityModel>();
+            return popupDens;
+           /* foreach (PopulationDencityModel item in popupDens)
+            {
+                Console.WriteLine("{0}:{1}:{2}:{3}:{4}:{5}:{6}", item.ID, item.EBLongt, item.EBLat, item.EBTimeStart, item.EBTimeEnd, item.EBPopulation, item.EBSource);
+            }*/
 
         }
 
@@ -110,4 +118,38 @@ namespace EventbriteCSharp
             
         }
     }
+
+    public class PopulationDencityModel
+    {
+        public int ID { get; set; }
+        public double EBLat { get; set; }
+        public double EBLongt { get; set; }
+        public DateTime EBTimeStart { get; set; }
+        public DateTime EBTimeEnd { get; set; }
+        public int EBPopulation { get; set; }
+        public int EBSource { get; set; }
+
+    }
+
+    public static class ExtensionMethods
+    {
+        public static List<T> MapTableToList<T>(this DataTable table) where T : new()
+        {
+            List<T> result = new List<T>();
+            var Type = typeof(T);
+
+            foreach (DataRow row in table.Rows)
+            {
+                T item = new T();
+                foreach (var property in Type.GetProperties())
+                {
+                    property.SetMethod.Invoke(item, new object[] { row[table.Columns[property.Name]] });
+                }
+                result.Add(item);
+            }
+
+            return result;
+        }
+    }
+
 }
