@@ -19,38 +19,27 @@ namespace EventbriteCSharp
     {
         static void Main(string[] args)
         {
-            var locat = 1;
+            var rad = 1;
             double lat = 38.9339;
             double longt = -77.1773;
             var stDate = "2017-07-20T09:42:54Z";
             var endDate = "2017-07-22T09:42:54Z";
             var token = "2NEWI72RJPV4KP2G64V3";
-            var data = GetData(locat, lat, longt, stDate, endDate, token);
-            var datares = ReturnListModel(locat, lat, longt, stDate, endDate, token);
+            var data = GetSetData(rad, lat, longt, stDate, endDate, token);
+            var datares = ReturnListModel(rad, lat, longt, stDate, endDate, token);
             Console.ReadKey();
         }
 
-        public static IList <PopulationDencityModel>  ReturnListModel (int locat, double lat, double longt, string stDate, string endDate, string token)
-        {
-            /*
-            declare @num_hours int; 
-            set @num_hours = 5; 
 
-            select dateadd(HOUR, @num_hours, getdate()) as time_added, 
-            getdate() as curr_date  
-            */
-
+        //receive data from SQL Server -> store data as the model 
+        public static IList <PopulationDencityModel>  ReturnListModel (int rad, double lat, double longt, string stDate, string endDate, string token)
+        {        
             SqlConnection conn = new SqlConnection(@"Server= LAPTOP-JDV1D5J5\SQLEXPRESS; Database=EventBriteData; User Id=sa; Password = 1234;");
             //SELECT * FROM EventBTable;
-            string querySelect = string.Format( "SELECT * FROM EventBTable;");
+            string querySelect = string.Format("SELECT * FROM EventBTable;");
             /*  "Declare @stdatetime datetime=" + stDate + ";" + "SELECT * FROM EventBTable" +
-                "Where" +  "@stdatetime between EBTimeStart and  EBTimeEnd;"
-            /*
-             Declare @stdatetime datetime='2017-07-20 15:00:00';
-
-SELECT * FROM EventBTable Where  @stdatetime between EBTimeStart and  EBTimeEnd;
-
-             */
+                "Where @stdatetime between EBTimeStart and  EBTimeEnd;"
+            */
             SqlCommand cmd = new SqlCommand(querySelect, conn);
             conn.Open();
 
@@ -60,13 +49,7 @@ SELECT * FROM EventBTable Where  @stdatetime between EBTimeStart and  EBTimeEnd;
             //query your database and return the result to your datatable
             DataTable dataTable = new DataTable();
             dataAdapt.Fill(dataTable);
-         /*   foreach (DataRow dataRow in dataTable.Rows)
-            {
-                foreach (var item in dataRow.ItemArray)
-                {
-                    //Console.WriteLine(item);
-                }
-            }*/
+
             conn.Close();
             dataAdapt.Dispose();
 
@@ -80,11 +63,11 @@ SELECT * FROM EventBTable Where  @stdatetime between EBTimeStart and  EBTimeEnd;
 
         }
 
-
-        public static string[] GetData(int locat, double lat, double longt, string stDate, string endDate, string token)
+        //function which to receive data from Eventbrite API and to store this data to SQL Server
+        public static string[] GetSetData(int rad, double lat, double longt, string stDate, string endDate, string token)
         {
             //https://www.eventbriteapi.com/v3/events/search/?expand=venue,location.within=100mi&location.latitude=38.9339&location.longitude=-77.1773&start_date.range_start=2017-07-19T09%3A42%3A54Z&&token=2NEWI72RJPV4KP2G64V3
-            string url = "https://www.eventbriteapi.com/v3/events/search/?expand=venue," + "location.within=" + locat + "mi" + "&location.latitude=" + lat + "&location.longitude="
+            string url = "https://www.eventbriteapi.com/v3/events/search/?expand=venue," + "location.within=" + rad + "mi" + "&location.latitude=" + lat + "&location.longitude="
                + longt + "&start_date.range_start=" + stDate + "&start_date.range_end=" + endDate + "&token=" + token;
             // Creating an object of WebClient 
             using (var webClient = new WebClient())
@@ -107,6 +90,9 @@ SELECT * FROM EventBTable Where  @stdatetime between EBTimeStart and  EBTimeEnd;
                 var venueLongt = JObject.Parse(response)["events"].Select(v => (double)v["venue"]["address"]["longitude"]).ToList();
 
                 string[] respArr = new string[capacity.Count];
+                string queryClean = ("TRUNCATE TABLE EventBTable");
+                SqlCommand comd = new SqlCommand(queryClean, conn);
+                comd.ExecuteNonQuery();
 
                 // Recording received elements to SLQ 
                 for (int i = 0; i < capacity.Count; i++)
@@ -123,12 +109,11 @@ SELECT * FROM EventBTable Where  @stdatetime between EBTimeStart and  EBTimeEnd;
                 Console.WriteLine("Inserting Data Successfully");
                 conn.Close();
                 return respArr;
-            }
-
-            
+            }   
         }
     }
 
+    //Class Model in which data from SQL will be store 
     public class PopulationDencityModel
     {
         public int ID { get; set; }
