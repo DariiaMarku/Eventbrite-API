@@ -120,6 +120,12 @@ namespace EventbriteCSharp
                 }
 
                 Console.WriteLine("Inserting Data Successfully");
+                string queryUpdate = ("UPDATE EventBTable SET GeoLocation = geography::STPointFromText('POINT(' + CAST(EBLongt AS VARCHAR(20)) + ' ' + CAST(EBLat AS VARCHAR(20)) + ')', 4326)");
+                
+                SqlCommand upd = new SqlCommand(queryUpdate, conn);
+                upd.ExecuteNonQuery();
+                Console.WriteLine("Updating Data Successfully");
+
                 conn.Close();
                 return respArr;
             }   
@@ -143,6 +149,13 @@ namespace EventbriteCSharp
         public int EBPopulation { get; set; }
         public int EBSource { get; set; }
         public int EBVenueID { get; set; }
+       // public float GeoLocation { get; set; }
+        /*
+         var text = string.Format("POINT({0} {1})", currentLatitude, currentLongitude);
+        DbGeography geo = DbGeography.FromText(text, 4326);
+        results = query.OrderBy(c => c.Posizione.Distance(geo)).ToList();
+
+    */
 
     }
 
