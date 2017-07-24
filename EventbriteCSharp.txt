@@ -1,22 +1,16 @@
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using EventbriteNET;
-using System.Net.Http;
-using System.Net;
-using System.IO;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using System.Data.SqlClient;
 using System.Data;
+using System.Data.SqlClient;
+using System.Linq;
+using System.Net;
+using System.Web;
 
-namespace EventbriteCSharp
+namespace GSATPES_Data1.Models
 {
-
-    class EventBrite
-    {
+    public class EventbriteData
+    {/*
         static void Main(string[] args)
         {
             var rad = 10000;
@@ -25,22 +19,79 @@ namespace EventbriteCSharp
             var date = "2017-07-22";
             var timeH = "15";
             var timeM = "00";
-            
+
             var data = GetSetData(rad, lat, longt, date, timeH, timeM);
             var datares = ReturnListModel(lat, longt, date, timeH, timeM);
 
             Console.ReadKey();
+        }*/
+
+
+
+        /*
+         CREATE PROCEDURE eventbriteLookup (@iLAT VARCHAR(20), @iLONG VARCHAR(20), @iRAD INT, @oPOP FLOAT OUTPUT) 
+AS BEGIN
+WITH RESULT
+AS (SELECT *
+FROM DBO.EventBTable
+WHERE GEOGRAPHY::STGeomFromText('POINT('+@iLONG+' '+@iLAT+')', 4326).STBuffer(@iRAD).STIntersects(GeoLocation)=1)
+SELECT @oPOP = SUM(EBPopulation) FROM RESULT 
+END
+
+--EXECUTE eventbriteLookup @iLAT=38.9, @iLONG=-77, @iRAD=5, @oPOP=7
+          */
+
+        public static double GetData(string lat, string lng, float rad)
+        {
+            //, string timeH, string timeM, string date
+            //var userDate = ("'" + date + " " + timeH + ":" + timeM + ":" + "00" + "'");
+            string sConn = (@"Server= LAPTOP-JDV1D5J5\SQLEXPRESS; Database=EventBriteData; User Id=sa; Password = 1234;");
+            using (SqlConnection conn = new SqlConnection(sConn))
+            {
+                conn.Open();
+                using (SqlCommand cmd = new SqlCommand("dbo.eventbriteLookup", conn))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+
+                    cmd.Parameters.AddWithValue("@iLAT", lat);  // input parameter
+                    cmd.Parameters.AddWithValue("@iLONG", lng);  // input parameter
+                    cmd.Parameters.AddWithValue("@iRAD", 70.7);  // input parameter
+                    //cmd.Parameters.AddWithValue("@stdatetime", userDate);
+                    // output parameter
+                    SqlParameter totpop = new SqlParameter("@oPOP", DbType.Double);
+                    totpop.Direction = System.Data.ParameterDirection.Output;
+                    cmd.Parameters.Add(totpop);
+
+
+                    cmd.Connection = conn;
+                    double population;
+                    cmd.ExecuteNonQuery();
+                    var test = cmd.Parameters["@oPOP"].Value.ToString();
+                    if (test == "")
+                    {
+                        population = 0;
+                    }
+                    else
+                    {
+                        population = double.Parse(cmd.Parameters["@oPOP"].Value.ToString());
+                    }
+                    conn.Close();
+
+                    return population;
+                }
+            }
         }
+    
 
 
-        //receive data from SQL Server -> store data as the model 
-        public static IList <PopulationDencityModel>  ReturnListModel (double lat, double longt, string date, string timeH, string timeM)
+    //receive data from SQL Server -> store data as the model 
+    public static IList<PopulationDencityModel> ReturnListModel(double lat, double longt, string date, string timeH, string timeM)
         {
             //'2017-07-20 15:00:00'
             var userDate = ("'" + date + " " + timeH + ":" + timeM + ":" + "00" + "'");
-            
+
             SqlConnection conn = new SqlConnection(@"Server= LAPTOP-JDV1D5J5\SQLEXPRESS; Database=EventBriteData; User Id=sa; Password = 1234;");
-            
+
             string querySelect = string.Format("Declare @stdatetime datetime=" + userDate + "; " + "SELECT * FROM EventBTable" +
                 " Where @stdatetime between EBTimeStart and  EBTimeEnd;");
             /*  
@@ -69,7 +120,7 @@ namespace EventbriteCSharp
         //function which to receive data from Eventbrite API and to store this data to SQL Server
         public static string[] GetSetData(double rad, double lat, double longt, string date, string timeH, string timeM)
         {
-            double radius = 100; // = ConvertMetersToMiles(rad);  //converting meters -> to miles
+            double radius = 1000; // = ConvertMetersToMiles(rad);  //converting meters -> to miles
 
             //2017-07-20T09:42:54Z
             var plushour = 24;
@@ -116,19 +167,19 @@ namespace EventbriteCSharp
                                    "VALUES (" + venueLat[i] + ", " + venueLongt[i] + ", '" + timeStart[i].ToString("yyyy-MM-dd HH:mm:ss") + "', '" + timeEnd[i].ToString("yyyy-MM-dd HH:mm:ss") + "', " + capacity[i] + ", " + "3, " + venueId[i] + ")";
 
                     SqlCommand cmd = new SqlCommand(queryInsert, conn);
-                    cmd.ExecuteNonQuery();                 
+                    cmd.ExecuteNonQuery();
                 }
 
                 Console.WriteLine("Inserting Data Successfully");
                 string queryUpdate = ("UPDATE EventBTable SET GeoLocation = geography::STPointFromText('POINT(' + CAST(EBLongt AS VARCHAR(20)) + ' ' + CAST(EBLat AS VARCHAR(20)) + ')', 4326)");
-                
+
                 SqlCommand upd = new SqlCommand(queryUpdate, conn);
                 upd.ExecuteNonQuery();
                 Console.WriteLine("Updating Data Successfully");
 
                 conn.Close();
                 return respArr;
-            }   
+            }
         }
         public static double ConvertMetersToMiles(double meters)
         {
@@ -149,7 +200,7 @@ namespace EventbriteCSharp
         public int EBPopulation { get; set; }
         public int EBSource { get; set; }
         public int EBVenueID { get; set; }
-       // public float GeoLocation { get; set; }
+        // public float GeoLocation { get; set; }
         /*
          var text = string.Format("POINT({0} {1})", currentLatitude, currentLongitude);
         DbGeography geo = DbGeography.FromText(text, 4326);
